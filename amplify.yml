@@ -1,0 +1,17 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - python --version
+        - pip install -r requirements.txt
+    build:
+      commands:
+        - echo "Building Streamlit application..."
+  artifacts:
+    baseDirectory: /
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - '.venv/**/*'
