@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Sentiment Tracker | AWS Amplify + Comprehend</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🎯 Real-Time Sentiment Tracking Dashboard</h1>
+            <p class="subtitle">Powered by AWS Amplify + Amazon Comprehend</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'analyze')">📝 Analyze Text</button>
+            <button class="tab-button" onclick="openTab(event, 'dashboard')">📊 Dashboard</button>
+            <button class="tab-button" onclick="openTab(event, 'trends')">📈 Trends</button>
+            <button class="tab-button" onclick="openTab(event, 'about')">ℹ️ About</button>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h3>⚙️ Configuration</h3>
+            <div class="config-section">
+                <h4>AWS Services</h4>
+                <div class="info-box">
+                    <p>🔹 <strong>AWS Amplify</strong>: Frontend Hosting</p>
+                    <p>🔹 <strong>Amazon Comprehend</strong>: Sentiment Analysis</p>
+                </div>
+            </div>
+            <hr>
+            <div class="config-section">
+                <h4>Analysis Settings</h4>
+                <label for="language">Language:</label>
+                <select id="language">
+                    <option>English</option>
+                    <option>Spanish</option>
+                    <option>French</option>
+                    <option>German</option>
+                    <option>Italian</option>
+                </select>
+                <br><br>
+                <label>
+                    <input type="checkbox" id="autoRefresh"> Auto Refresh
+                </label>
+            </div>
+            <hr>
+            <div class="stats-section">
+                <h4>Statistics</h4>
+                <div class="metric-box">
+                    <div class="metric-label">Total Analyses</div>
+                    <div class="metric-value" id="totalAnalyses">0</div>
+                </div>
+                <button onclick="clearHistory()" class="btn-secondary">Clear History</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Analyze Tab -->
+            <div id="analyze" class="tab-content active">
+                <h2>Text Sentiment Analysis</h2>
+                
+                <div class="analysis-container">
+                    <div class="input-section">
+                        <label for="textInput">Enter text to analyze:</label>
+                        <textarea id="textInput" placeholder="Type or paste your text here..." rows="8"></textarea>
+                        
+                        <div class="button-group">
+                            <button onclick="analyzeSentiment()" class="btn-primary">🔍 Analyze Sentiment</button>
+                            <button onclick="clearInput()" class="btn-secondary">🗑️ Clear</button>
+                        </div>
+
+                        <div id="resultSection" class="result-section" style="display: none;">
+                            <h3>Analysis Result</h3>
+                            <div id="sentimentResult" class="sentiment-result"></div>
+                            <div id="confidenceScores" class="confidence-scores"></div>
+                        </div>
+                    </div>
+
+                    <div class="tips-section">
+                        <h3>💡 Tips</h3>
+                        <ul>
+                            <li>Enter clear, complete sentences</li>
+                            <li>Minimum 10 characters recommended</li>
+                            <li>Supports multiple languages</li>
+                            <li>Real-time processing</li>
+                            <li>Results saved to history</li>
+                        </ul>
+
+                        <h3>📋 Recent Analyses</h3>
+                        <div id="recentAnalyses" class="recent-list">
+                            <p class="empty-state">No analyses yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content">
+                <h2>Sentiment Dashboard</h2>
+                
+                <div id="dashboardContent" class="dashboard-content">
+                    <div class="metrics-row">
+                        <div class="metric-card positive">
+                            <div class="metric-emoji">😊</div>
+                            <div class="metric-label">Positive</div>
+                            <div class="metric-value" id="positiveCount">0</div>
+                            <div class="metric-delta" id="positivePct">0%</div>
+                        </div>
+                        <div class="metric-card negative">
+                            <div class="metric-emoji">😞</div>
+                            <div class="metric-label">Negative</div>
+                            <div class="metric-value" id="negativeCount">0</div>
+                            <div class="metric-delta" id="negativePct">0%</div>
+                        </div>
+                        <div class="metric-card neutral">
+                            <div class="metric-emoji">😐</div>
+                            <div class="metric-label">Neutral</div>
+                            <div class="metric-value" id="neutralCount">0</div>
+                            <div class="metric-delta" id="neutralPct">0%</div>
+                        </div>
+                        <div class="metric-card mixed">
+                            <div class="metric-emoji">🤔</div>
+                            <div class="metric-label">Mixed</div>
+                            <div class="metric-value" id="mixedCount">0</div>
+                            <div class="metric-delta" id="mixedPct">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-container">
+                            <h3>Sentiment Distribution</h3>
+                            <div id="pieChart"></div>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Sentiment Breakdown</h3>
+                            <div id="barChart"></div>
+                        </div>
+                    </div>
+
+                    <div class="history-section">
+                        <h3>📜 Analysis History</h3>
+                        <div id="historyTable"></div>
+                    </div>
+                </div>
+
+                <div id="emptyDashboard" class="empty-state-large">
+                    <p>👈 No data yet. Start by analyzing some text in the 'Analyze Text' tab!</p>
+                </div>
+            </div>
+
+            <!-- Trends Tab -->
+            <div id="trends" class="tab-content">
+                <h2>Sentiment Trends Over Time</h2>
+                
+                <div id="trendsContent">
+                    <div class="chart-container">
+                        <h3>Sentiment Timeline</h3>
+                        <div id="timelineChart"></div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Average Confidence Scores Trend</h3>
+                        <div id="trendChart"></div>
+                    </div>
+                </div>
+
+                <div id="emptyTrends" class="empty-state-large">
+                    <p>📊 Need at least 2 analyses to show trends. Keep analyzing!</p>
+                </div>
+            </div>
+
+            <!-- About Tab -->
+            <div id="about" class="tab-content">
+                <h2>About This Application</h2>
+                
+                <div class="about-grid">
+                    <div class="about-section">
+                        <h3>🎯 Overview</h3>
+                        <p>This is a <strong>Real-Time Sentiment Tracking Dashboard</strong> built with modern web technologies and designed to integrate with AWS services.</p>
+                        
+                        <h3>🛠️ Technologies</h3>
+                        <ul>
+                            <li><strong>Frontend</strong>: HTML5, CSS3, JavaScript</li>
+                            <li><strong>Hosting</strong>: AWS Amplify</li>
+                            <li><strong>AI/ML</strong>: Amazon Comprehend (Ready for integration)</li>
+                            <li><strong>Visualization</strong>: Plotly.js</li>
+                        </ul>
+                        
+                        <h3>✨ Features</h3>
+                        <ul>
+                            <li>Real-time sentiment analysis</li>
+                            <li>Support for multiple languages</li>
+                            <li>Interactive visualizations</li>
+                            <li>Historical trend analysis</li>
+                            <li>Confidence score tracking</li>
+                            <li>Responsive design</li>
+                        </ul>
+                    </div>
+
+                    <div class="about-section">
+                        <h3>📊 Sentiment Types</h3>
+                        
+                        <div class="sentiment-info">
+                            <div class="sentiment-type positive">
+                                <strong>😊 POSITIVE</strong>
+                                <p>Text expressing positive emotions, satisfaction, or approval</p>
+                            </div>
+                            
+                            <div class="sentiment-type negative">
+                                <strong>😞 NEGATIVE</strong>
+                                <p>Text expressing negative emotions, dissatisfaction, or criticism</p>
+                            </div>
+                            
+                            <div class="sentiment-type neutral">
+                                <strong>😐 NEUTRAL</strong>
+                                <p>Text that is factual, objective, or lacks emotional content</p>
+                            </div>
+                            
+                            <div class="sentiment-type mixed">
+                                <strong>🤔 MIXED</strong>
+                                <p>Text containing both positive and negative sentiments</p>
+                            </div>
+                        </div>
+
+                        <h3>🔧 AWS Integration Points</h3>
+                        <ul>
+                            <li>Amazon Comprehend API for sentiment detection</li>
+                            <li>AWS Amplify for static hosting</li>
+                            <li>Amazon S3 for data storage (optional)</li>
+                            <li>Amazon CloudWatch for monitoring (optional)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Built with ❤️ using HTML, CSS, JavaScript | Powered by AWS Amplify + Amazon Comprehend</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

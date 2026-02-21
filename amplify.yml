@@ -1,17 +1,14 @@
 version: 1
 frontend:
   phases:
-    preBuild:
-      commands:
-        - python --version
-        - pip install -r requirements.txt
     build:
       commands:
-        - echo "Building Streamlit application..."
+        - echo "Building static website for sentiment tracking..."
+        - echo "Static files ready for deployment"
   artifacts:
     baseDirectory: /
     files:
+      - 'index.html'
+      - 'styles.css'
+      - 'script.js'
       - '**/*'
-  cache:
-    paths:
-      - '.venv/**/*'
